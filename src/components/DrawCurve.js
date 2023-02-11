@@ -1,53 +1,73 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Chart as ChartJS,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Tooltip,
-  Legend,
-} from 'chart.js';
+import React, { useState, useEffect, useRef } from 'react';
 import { Line } from 'react-chartjs-2';
-ChartJS.register(LinearScale, PointElement, LineElement, Tooltip, Legend);
+import axios from 'axios';
+import { Chart as ChartJS } from 'chart.js/auto';
 
-const DrawCurve = ({ curve }) => {
-  const [data, setData] = useState();
-
-  const mapCurveToDataset = ({ id, x, y }) => {
-    if (!curve || !curve.x || !curve.y) {
-      return null;
-    }
-    return {
-      label: `Curve ${id}`,
-      fill: false,
-      backgroundColor: '#36A2EB',
-      borderColor: '#36A2EB',
-      data: x.map((val, index) => ({ x: val, y: y[index] })),
-    };
-  };
+const DrawCurve = ({ lineId }) => {
+  const lineRef = useRef(null);
+  const [curvesData, setCurvesData] = useState();
+  const [curves, setCurves] = useState();
+  const [lineIndex, setLineIndex] = useState(-1);
 
   useEffect(() => {
-    if (curve) {
-      setData({
-        datasets: [mapCurveToDataset(curve)],
+    axios
+      .get('http://localhost:3001/curves')
+      .then((response) => setCurves(response.data))
+      .catch((error) => console.error(error));
+  }, []);
+
+  useEffect(() => {
+    if (curves && lineId) {
+      setLineIndex(curves.findIndex((el) => el.id === lineId));
+    }
+  }, [curves, lineId]);
+
+  useEffect(() => {
+    var data = [];
+    var labels = [];
+
+    if (curves && lineIndex >= 0) {
+      for (let index = 0; index < curves[lineIndex].x.length; index++) {
+        labels.push(curves[lineIndex].x[index]);
+        data.push(curves[lineIndex].y[index]);
+      }
+      setCurvesData({
+        labels: labels,
+        datasets: [
+          {
+            data: data,
+            tension: 0.4,
+            pointRadius: 0,
+            hitRadius: 0,
+          },
+        ],
       });
     }
-  }, [curve]);
+  }, [curves, lineIndex]);
+
+  const options = {
+    plugins: {
+      legend: {
+        display: false,
+      },
+      tooltip: {
+        intersect: false,
+      },
+    },
+  };
 
   return (
     <>
-      {data && (
-        <Line
-          data={data}
-          options={{
-            id: 'Line',
-            plugins: {
-              legend: {
-                display: false,
-              },
-            },
-          }}
-        />
+      {curvesData && (
+        <div style={{ position: 'relative', zIndex: 1, width: '600px' }}>
+          <Line
+            data={curvesData}
+            ref={lineRef}
+            width={500}
+            height={300}
+            options={options}
+          />
+        </div>
       )}
     </>
   );
