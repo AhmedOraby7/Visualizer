@@ -1,3 +1,6 @@
+# Video with a quick overview:
+[Quick description](https://drive.google.com/file/d/1WiOIx_Vk79S_PJ4xX18dWlPnp6yvJaFA/view?usp=sharing)
+
 # How to install and run it?
 
 - The first step is to clone the project or download it directly from this repo.
